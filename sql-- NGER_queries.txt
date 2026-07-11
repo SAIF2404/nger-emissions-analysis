@@ -1,0 +1,85 @@
+sql-- NGER Emissions Analysis Project
+-- Saif Rehman
+-- Started: July 2026
+-- Query 1: Count total corporations
+SELECT COUNT(*) AS total_corporations
+FROM emissions_2324;
+
+-- Query 2: Top 10 emitters by Scope 1
+SELECT "Organisation name",
+CAST(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '') AS REAL) AS scope1
+FROM emissions_2324
+ORDER BY scope1 DESC
+LIMIT 10;
+
+-- Query 3: National Scope 1 total
+SELECT CAST(SUM(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '')) AS REAL) AS total_scope1
+FROM emissions_2324;
+
+-- RIGHT -- comma because Scope 2 follows it
+SELECT CAST(SUM(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '')) AS REAL) AS total_scope1,
+       CAST(SUM(REPLACE("Total scope 2 emissions (t CO2-e)", ',', '')) AS REAL) AS total_scope2
+FROM emissions_2324;
+---sql-- Query 4: Corporation count by reporting year
+SELECT reporting_year, COUNT(*) AS organisations
+FROM emissions_all
+GROUP BY reporting_year;
+---SELECT reporting_year,
+       CAST(AVG(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '')) AS REAL) AS avg_scope1
+FROM emissions_all
+GROUP BY reporting_year;
+
+----
+SELECT "Organisation name",
+       ROUND(
+           CAST(REPLACE("Net energy consumed (GJ)", ',', '') AS REAL) /
+           CAST(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '') AS REAL)
+       , 2) AS intensity
+FROM emissions_2324
+ORDER BY CAST(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '') AS REAL) DESC
+LIMIT 20;
+
+----SELECT reporting_year, 
+       CAST(SUM(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '')) AS REAL) AS total_scope1
+FROM emissions_all
+GROUP BY reporting_year
+ORDER BY reporting_year;
+
+----SELECT "Organisation name", COUNT(reporting_year) AS years_reported
+FROM emissions_all
+GROUP BY "Organisation name"
+HAVING COUNT(reporting_year) = 3
+ORDER BY "Organisation name";
+
+----  SELECT sectors.sector,
+       CAST(SUM(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '')) AS REAL) AS total_scope1
+FROM emissions_2324
+JOIN sectors ON emissions_2324."Organisation name" = sectors.corporation_name
+GROUP BY sectors.sector
+ORDER BY total_scope1 DESC;
+--- SELECT sectors.sector,
+       CAST(SUM(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '')) AS REAL) AS total_scope1
+FROM emissions_2324
+JOIN sectors ON emissions_2324."Organisation name" = sectors.corporation_name
+GROUP BY sectors.sector
+ORDER BY total_scope1 DESC;
+---- SELECT sectors.sector,
+       emissions_all.reporting_year,
+       CAST(SUM(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '')) AS REAL) AS total_scope1
+FROM emissions_all
+JOIN sectors ON emissions_all."Organisation name" = sectors.corporation_name
+GROUP BY sectors.sector, emissions_all.reporting_year
+ORDER BY sectors.sector, emissions_all.reporting_year;
+
+---SELECT e."Organisation name",
+       s.sector,
+       CAST(REPLACE(e."Total scope 1 emissions (t CO2-e)", ',', '') AS REAL) AS scope1
+FROM emissions_2324 e
+JOIN sectors s ON e."Organisation name" = s.corporation_name
+WHERE CAST(REPLACE(e."Total scope 1 emissions (t CO2-e)", ',', '') AS REAL) = (
+    SELECT MAX(CAST(REPLACE("Total scope 1 emissions (t CO2-e)", ',', '') AS REAL))
+    FROM emissions_2324
+    JOIN sectors ON emissions_2324."Organisation name" = sectors.corporation_name
+    WHERE sectors.sector = s.sector
+)
+ORDER BY scope1 DESC;
